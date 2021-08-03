@@ -8,6 +8,7 @@ use App\Models\LeaveData;
 use App\Models\LeaveQuota;
 use App\Models\Time;
 
+use App\Models\users;
 use App\Models\WorkFromHome;
 use App\Models\WorkHoliday;
 use Illuminate\Http\Request;
@@ -23,8 +24,8 @@ class TimeAttendence extends Controller
 
         $timearr = Time::whereDate('start_date', '=', $thisDate)->get();
 
-        if($timearr->isNotEmpty()){
-            foreach ($timearr as $key => $item ) {
+        if ($timearr->isNotEmpty()) {
+            foreach ($timearr as $key => $item) {
                 $item->end_time = $thisTime;
                 $item->end_date = $thisDate;
                 $item->save();
@@ -42,6 +43,19 @@ class TimeAttendence extends Controller
         //$time = Time::all();
         $time = Time::where('user_id', '=', $id)->get();
         return response()->json($time);
+    }
+    public function postphotourl(Request $request)
+    {
+        $photoUrl = $request->photoUrl;
+        $email = $request->email;
+
+
+        $user = BeneatUser::where('email','=',$email)->first();
+        $user->photo = $photoUrl;
+
+        $user->save();
+        return response()->json($user);
+
     }
 
     public function leaveloadedit(Request $request)
@@ -106,6 +120,13 @@ class TimeAttendence extends Controller
 
     }
 
+    public function destroy($id)
+    {
+        $leaveData = LeaveData::find($id)->delete();
+
+        return response()->json($leaveData);
+    }
+
     public function leaveDataPersonPagnigation(Request $request)
     {
         $page = $request->offsetPage;
@@ -124,11 +145,39 @@ class TimeAttendence extends Controller
 
     }
 
+    public function timeattendenthistorypanigationfortimeline(Request $request)
+    {
+        $page = $request->offsetPage;
+        $id = $request->id;
+
+        $time = Time::where('user_id', '=', $id)
+            ->offset($page)
+            ->limit(1)
+            ->orderBy('id', 'desc')
+            ->first();
+        return response()->json($time);
+
+    }
+
+    public function leavedatapanigationfortimeline(Request $request)
+    {
+        $page = $request->offsetPage;
+        $id = $request->id;
+
+        $leave = LeaveData::where('user_id', '=', $id)
+            ->offset($page)
+            ->limit(1)
+            ->orderBy('id', 'desc')
+            ->first();
+        return response()->json($leave);
+
+    }
+
     public function leaveDataDepartment(Request $request)
     {
         $departmentName = $request->departmentName;
 
-
+        $thisYear = date('Y');
         //$leaveData = LeaveData::all();
         $leaveData = LeaveData::select('leave.*', 'user.name',
             'department.name as departmentName',
@@ -139,7 +188,9 @@ class TimeAttendence extends Controller
             ->join('department', 'department.id', '=', 'user.department_id')
             ->where('department.name', '=', $departmentName)
             ->where('leave_status', '=', 'อนุมัติ')
+            ->whereYear('start_date','=', $thisYear)
             ->get();
+
 
         return response()->json($leaveData);
 
@@ -152,8 +203,10 @@ class TimeAttendence extends Controller
 
     public function holiday(Request $request)
     {
+        $thisYear = date('Y');
 
-        $time = Holiday::get();
+        $time = Holiday::whereYear('start_date', '=', $thisYear)
+            ->get();
         return response()->json($time);
     }
 
@@ -187,13 +240,10 @@ class TimeAttendence extends Controller
         $leave_date_end = $request->dateEnd;
 
 
-        $datetime1 =Carbon::parse($leave_date_start);
-       $datetime2 =Carbon::parse($leave_date_end);
+        $datetime1 = Carbon::parse($leave_date_start);
+        $datetime2 = Carbon::parse($leave_date_end);
         $days = $datetime2->diffInDays($datetime1);
-        $days = $days+1;
-
-
-
+        $days = $days + 1;
 
 
 //        $leave_status = $request->status;
@@ -213,6 +263,7 @@ class TimeAttendence extends Controller
 
 
     }
+
     public function store_leave_edit(Request $request)
     {
 
@@ -226,18 +277,15 @@ class TimeAttendence extends Controller
         $leave_date_end = $request->end_date;
 
 
-        $datetime1 =Carbon::parse($leave_date_start);
-        $datetime2 =Carbon::parse($leave_date_end);
+        $datetime1 = Carbon::parse($leave_date_start);
+        $datetime2 = Carbon::parse($leave_date_end);
         $days = $datetime2->diffInDays($datetime1);
-        $days = $days+1;
-
-
-
+        $days = $days + 1;
 
 
 //        $leave_status = $request->status;
 
-        $leaveData = LeaveData::where('id','=', $record_id )->first();
+        $leaveData = LeaveData::where('id', '=', $record_id)->first();
 
         $leaveData->leave_type = $leave_type;
         $leaveData->leave_description = $leave_desc;
@@ -401,5 +449,12 @@ class TimeAttendence extends Controller
         return response()->json($response);
 
 
+    }
+
+    public function checkuser(Request $request){
+        $email = $request->email;
+
+        $response['admin'] = users::where('email','=',$email)->first();
+        return response()->json($response);
     }
 }

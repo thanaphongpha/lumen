@@ -54,6 +54,8 @@ $router->delete('/feed/{id}', 'NewsFeedController@destroy');
 
 $router->get('/checkIn', 'TimeAttendence@index');
 $router->get('/checkInpagination', 'TimeAttendence@checkInPagination');
+$router->get('/history', 'TimeAttendence@timeattendenthistorypanigationfortimeline');
+$router->get('/leavetimeline', 'TimeAttendence@leavedatapanigationfortimeline');
 $router->get('/leavequota', 'TimeAttendence@leavequota');
 $router->get('/leavedataedit', 'TimeAttendence@leaveloadedit');
 
@@ -71,7 +73,10 @@ $router->post('/leavedata', 'TimeAttendence@store_leave');
 $router->post('/workholiday', 'TimeAttendence@store_workholiday');
 $router->post('/workfromhome', 'TimeAttendence@store_workfromhome');
 $router->post('/checkIn', 'TimeAttendence@store_in');
+$router->post('/user','TimeAttendence@checkuser');
+$router->post('/postphotourl','TimeAttendence@postphotourl');
 
 $router->put('/leavedata', 'TimeAttendence@store_leave_edit');
 $router->put('/checkOut/{id}', 'TimeAttendence@store_out');
 
+$router->delete('/leavedata/{id}', 'TimeAttendence@destroy');
